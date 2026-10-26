@@ -2,7 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { initProject } from "../../src/project/init.js";
+import { initProject, serverCommand } from "../../src/project/init.js";
 
 const adapterDir = path.resolve("tests/fixtures/mini-kit-adapter");
 let dir: string;
@@ -19,7 +19,10 @@ describe("initProject", () => {
     expect(written.map((w) => w.replace(/\\/g, "/")).sort()).toEqual([".kitsmith/config.json", ".mcp.json", "AGENTS.md", "CLAUDE.md"]);
     expect(JSON.parse(read(".kitsmith/config.json")).adapter).toBe(adapterDir);
     expect(read("AGENTS.md")).toContain("find_component");
-    expect(JSON.parse(read(".mcp.json")).mcpServers.kitsmith.command).toBe("npx");
+    const server = JSON.parse(read(".mcp.json")).mcpServers.kitsmith;
+    expect(server.command).toBe("node"); // the repo checkout is not inside node_modules
+    expect(server.args).toEqual([path.resolve("dist", "cli.js"), "serve", "--project", "."]);
+    expect(snippets).toContain(JSON.stringify(path.resolve("dist", "cli.js")));
     expect(snippets).toContain("[mcp_servers.kitsmith]");
     expect(snippets).toContain("opencode");
   });
@@ -50,5 +53,16 @@ describe("initProject", () => {
     const c = read("CLAUDE.md");
     expect(c).toContain("# Notes");
     expect(c.split("@AGENTS.md").length - 1).toBe(1);
+  });
+});
+
+describe("serverCommand", () => {
+  it("uses npx when the package lives inside node_modules", () => {
+    const root = path.join(path.sep, "proj", "node_modules", "kitsmith");
+    expect(serverCommand(root)).toEqual({ command: "npx", args: ["kitsmith", "serve", "--project", "."] });
+  });
+  it("points node at dist/cli.js for a checkout", () => {
+    const root = path.resolve(path.sep, "src", "kitsmith");
+    expect(serverCommand(root)).toEqual({ command: "node", args: [path.join(root, "dist", "cli.js"), "serve", "--project", "."] });
   });
 });

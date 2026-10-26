@@ -37,7 +37,8 @@ are legitimate and are not flagged.
 
 ## Quick start
 
-Requires Node 22 or newer. Until the package is published, run it from a clone:
+Requires Node 22 or newer. Until the package is published, run it from a clone
+(`npm run build` must run first, because `dist/cli.js` is what agent hosts start):
 
 ```sh
 git clone <this repo> && cd kitsmith
@@ -53,7 +54,9 @@ cd ../demo && npm run dev
 
 `new` copies a Vite + React + react-router sandbox with the kit installed,
 mock-data helpers, `AGENTS.md`, `CLAUDE.md` and `.mcp.json` already wired to
-kitsmith. Open the folder in your agent host and describe the screens you want.
+kitsmith. When run from a clone, the generated MCP config starts the server with
+`node <clone>/dist/cli.js serve --project .`, so build the clone first; once
+kitsmith is installed from npm it uses `npx kitsmith serve --project .`. Open the folder in your agent host and describe the screens you want.
 The project name must be lowercase and npm-safe. If `npm install` fails, the
 project is kept and you are told to run `npm install` yourself (`--no-install`
 skips the install step).
@@ -111,7 +114,7 @@ loaded by filesystem path, so it can live anywhere; built-in ones are in
 `adapters/`. All relative paths resolve against the adapter directory.
 
 ```ts
-// adapters/antd/kit.config.ts imports the types from src/adapter/types
+// adapters/antd/kit.config.ts
 import type { AdapterConfig } from "../../src/adapter/types.js";
 
 const config: AdapterConfig = {
@@ -125,7 +128,6 @@ const config: AdapterConfig = {
   tokens: "tokens.ts",
   recipes: "recipes",              // dir of .md files with frontmatter
   guidelines: "guidelines",        // dir of .md files with frontmatter
-  examples: "examples",            // dir of <Component>.tsx usage examples
   allowedExternal: ["@ant-design/charts", "@ant-design/icons"],
   sandbox: {
     overlay: "sandbox",            // files laid over templates/sandbox
@@ -135,7 +137,11 @@ const config: AdapterConfig = {
 export default config;
 ```
 
-Only `name`, `package` and `typesEntry` are required.
+Only `name`, `package` and `typesEntry` are required. Optional `examples` is a
+directory of `<Component>.tsx` usage examples.
+
+Type imports from the package are not exported yet: external adapters should
+define the few types they need locally or copy them from `src/adapter/types.ts`.
 
 ### Recipes and guidelines
 

@@ -9,7 +9,17 @@ export class InitError extends Error {}
 const START = "<!-- kitsmith:start -->";
 const END = "<!-- kitsmith:end -->";
 
-const templatePath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../templates/AGENTS.md.tpl");
+const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
+const templatePath = path.join(packageRoot, "templates", "AGENTS.md.tpl");
+
+/** How an agent host should start the server: via npx when installed from npm, else straight from this checkout. */
+export function serverCommand(root: string): { command: string; args: string[] } {
+  const installed = path.resolve(root).split(path.sep).includes("node_modules");
+  const serve = ["serve", "--project", "."];
+  return installed
+    ? { command: "npx", args: ["kitsmith", ...serve] }
+    : { command: "node", args: [path.join(path.resolve(root), "dist", "cli.js"), ...serve] };
+}
 
 function readIfExists(file: string): string | undefined {
   return fs.existsSync(file) ? fs.readFileSync(file, "utf8") : undefined;
@@ -57,17 +67,18 @@ export async function initProject(opts: { projectDir: string; adapterDir: string
       throw new InitError(`Cannot parse ${mcpFile}; fix or remove it and run init again.`);
     }
   }
-  mcp.mcpServers = { ...mcp.mcpServers, kitsmith: { command: "npx", args: ["kitsmith", "serve", "--project", "."] } };
+  const server = serverCommand(packageRoot);
+  mcp.mcpServers = { ...mcp.mcpServers, kitsmith: server };
   write(".mcp.json", JSON.stringify(mcp, null, 2) + "\n");
 
   const snippets = [
     "Codex (add to ~/.codex/config.toml):",
     "[mcp_servers.kitsmith]",
-    'command = "npx"',
-    'args = ["kitsmith", "serve", "--project", "."]',
+    `command = ${JSON.stringify(server.command)}`,
+    `args = ${JSON.stringify(server.args)}`,
     "",
     "OpenCode (add to opencode.json):",
-    JSON.stringify({ mcp: { kitsmith: { type: "local", command: ["npx", "kitsmith", "serve", "--project", "."] } } }, null, 2),
+    JSON.stringify({ mcp: { kitsmith: { type: "local", command: [server.command, ...server.args] } } }, null, 2),
   ].join("\n");
   return { written, snippets };
 }
