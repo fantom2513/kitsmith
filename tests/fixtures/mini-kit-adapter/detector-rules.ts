@@ -1,6 +1,6 @@
 import type { DetectorRule, RuleHelpers } from "../../../src/adapter/types.js";
 
-export default function rules(_h: RuleHelpers): DetectorRule[] {
+export default function rules(h: RuleHelpers): DetectorRule[] {
   return [
     {
       id: "raw-button",
@@ -15,7 +15,7 @@ export default function rules(_h: RuleHelpers): DetectorRule[] {
         create(context) {
           return {
             JSXOpeningElement(node) {
-              if (node.name.type === "JSXIdentifier" && node.name.name === "button") {
+              if (h.jsxName(node) === "button") {
                 context.report({ node, messageId: "raw" });
               }
             },
