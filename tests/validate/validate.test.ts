@@ -5,7 +5,8 @@ import { loadAdapter } from "../../src/adapter/load.js";
 import { validateProject, formatReport } from "../../src/validate/validate.js";
 import { copyFixtureProject, fixtureProjectDir } from "../helpers/temp-project.js";
 
-const adapterDir = path.resolve(fixtureProjectDir, "../mini-kit-adapter");
+const NL = String.fromCharCode(10);
+const adapterDir =path.resolve(fixtureProjectDir, "../mini-kit-adapter");
 
 async function withProject(fn: (dir: string, adapter: Awaited<ReturnType<typeof loadAdapter>>) => void) {
   const adapter = await loadAdapter(adapterDir);
@@ -39,6 +40,7 @@ describe("validateProject", () => {
     withProject((dir, adapter) => {
       const r = validateProject(adapter, dir, ["src/good.tsx"]);
       expect(formatReport(r)).toBe("No problems found in 1 file(s).");
+      expect(r.complete).toBe(true);
     }));
 
   it("missing file", () =>
@@ -46,6 +48,8 @@ describe("validateProject", () => {
       const r = validateProject(adapter, dir, ["src/nope.tsx"]);
       expect(r.notes).toContain("File not found: src/nope.tsx");
       expect(r.filesChecked).toEqual([]);
+      expect(r.complete).toBe(false);
+      expect(formatReport(r)).toBe(["Nothing was validated.", "", "## Notes", "- File not found: src/nope.tsx"].join(NL));
     }));
 
   it("file outside tsconfig", () =>
@@ -63,6 +67,8 @@ describe("validateProject", () => {
       fs.mkdirSync(path.join(dir, "src"));
       const r = validateProject(adapter, dir);
       expect(r.notes).toContain("No .tsx files found under src/.");
+      expect(r.complete).toBe(false);
+      expect(formatReport(r).startsWith("Nothing was validated.")).toBe(true);
     }));
 
   it("broken tsconfig becomes a note and the detector still runs", () =>
@@ -78,5 +84,26 @@ describe("validateProject", () => {
       const r = validateProject(adapter, dir);
       expect(r.filesChecked).toContain("src/good.tsx");
       expect(r.filesChecked.length).toBeGreaterThanOrEqual(7);
+    }));
+
+  it("clean file with broken tsconfig is not reported as fully clean", () =>
+    withProject((dir, adapter) => {
+      fs.rmSync(path.join(dir, "tsconfig.json"));
+      const r = validateProject(adapter, dir, ["src/good.tsx"]);
+      expect(r.complete).toBe(false);
+      const text = formatReport(r);
+      expect(text.split(NL)[0]).toBe(
+        "No problems found in 1 file(s), but the type check did not run for some files (see Notes).",
+      );
+      expect(text).toContain(["## Notes", "- Type check skipped: Cannot typecheck: tsconfig.json not found"].join(NL));
+    }));
+
+  it("parse errors go to Detector errors, not duplicates", () =>
+    withProject((dir, adapter) => {
+      fs.writeFileSync(path.join(dir, "src/broken.tsx"), "const x = <div>;");
+      const text = formatReport(validateProject(adapter, dir, ["src/broken.tsx"]));
+      expect(text).toContain("## Detector errors");
+      expect(text).not.toContain("## Hand-rolled");
+      expect(text).not.toContain("→ use");
     }));
 });

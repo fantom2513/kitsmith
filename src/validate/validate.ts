@@ -9,6 +9,8 @@ export interface ValidationReport {
   typeFindings: TypeFinding[];
   detectorFindings: DetectorFinding[];
   notes: string[];
+  /** false when nothing was checked or the type check was skipped for any checked file */
+  complete: boolean;
 }
 
 const toRel = (projectDir: string, file: string) =>
@@ -30,7 +32,7 @@ function findTsx(dir: string, out: string[]): void {
 }
 
 export function validateProject(adapter: LoadedAdapter, projectDir: string, files?: string[]): ValidationReport {
-  const report: ValidationReport = { filesChecked: [], typeFindings: [], detectorFindings: [], notes: [] };
+  const report: ValidationReport = { filesChecked: [], typeFindings: [], detectorFindings: [], notes: [], complete: true };
 
   if (files === undefined) {
     const found: string[] = [];
@@ -38,6 +40,7 @@ export function validateProject(adapter: LoadedAdapter, projectDir: string, file
     report.filesChecked = found.map((f) => toRel(projectDir, f)).sort();
     if (report.filesChecked.length === 0) {
       report.notes.push("No .tsx files found under src/.");
+      report.complete = false;
       return report;
     }
   } else {
@@ -49,26 +52,32 @@ export function validateProject(adapter: LoadedAdapter, projectDir: string, file
       else if (!report.filesChecked.includes(rel)) report.filesChecked.push(rel);
     }
   }
-  if (report.filesChecked.length === 0) return report;
+  if (report.filesChecked.length === 0) {
+    report.complete = false;
+    return report;
+  }
 
   try {
     const inProgram = listTsconfigFiles(projectDir);
     const checkable = report.filesChecked.filter((f) => {
       if (inProgram.has(f)) return true;
       report.notes.push(`Not part of tsconfig, type check skipped: ${f}`);
+      report.complete = false;
       return false;
     });
     if (checkable.length > 0) report.typeFindings = runTypecheck(projectDir, checkable);
   } catch (e) {
     if (!(e instanceof TypecheckConfigError)) throw e;
     report.notes.push(`Type check skipped: ${e.message}`);
+    report.complete = false;
   }
 
   report.detectorFindings = runDetector(projectDir, report.filesChecked, adapter);
   return report;
 }
 
-const loc = (f: { file: string; line: number; column: number }) => `${f.file}:${f.line}:${f.column}`;
+const NL = String.fromCharCode(10);
+const loc =(f: { file: string; line: number; column: number }) => `${f.file}:${f.line}:${f.column}`;
 
 export function formatReport(r: ValidationReport): string {
   const sections: string[] = [];
@@ -81,16 +90,25 @@ export function formatReport(r: ValidationReport): string {
   if (deprecated.length > 0) {
     sections.push(["## Deprecated usage", ...deprecated.map((f) => `${loc(f)}  ${f.message}`)].join("\n"));
   }
-  if (r.detectorFindings.length > 0) {
-    // Internal kitsmith/* findings carry no suggestion: shown here without "→ use".
+  const detectorErrors = r.detectorFindings.filter((f) => f.ruleId.startsWith("kitsmith/"));
+  const duplicates = r.detectorFindings.filter((f) => !f.ruleId.startsWith("kitsmith/"));
+  if (duplicates.length > 0) {
     sections.push(
       [
         "## Hand-rolled duplicates of kit components",
-        ...r.detectorFindings.map((f) => `${loc(f)}  ${f.message}${f.suggest ? `  → use ${f.suggest}` : ""}`),
-      ].join("\n"),
+        ...duplicates.map((f) => `${loc(f)}  ${f.message}${f.suggest ? `  → use ${f.suggest}` : ""}`),
+      ].join(NL),
     );
   }
-  if (sections.length === 0) sections.push(`No problems found in ${r.filesChecked.length} file(s).`);
-  if (r.notes.length > 0) sections.push(["## Notes", ...r.notes.map((n) => `- ${n}`)].join("\n"));
-  return sections.join("\n\n");
+  if (detectorErrors.length > 0) {
+    sections.push(["## Detector errors", ...detectorErrors.map((f) => `${loc(f)}  ${f.message}`)].join(NL));
+  }
+  if (sections.length === 0) {
+    const n = r.filesChecked.length;
+    if (n === 0) sections.push("Nothing was validated.");
+    else if (r.complete) sections.push(`No problems found in ${n} file(s).`);
+    else sections.push(`No problems found in ${n} file(s), but the type check did not run for some files (see Notes).`);
+  }
+  if (r.notes.length > 0) sections.push(["## Notes", ...r.notes.map((n) => `- ${n}`)].join(NL));
+  return sections.join(NL + NL);
 }
