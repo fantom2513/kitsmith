@@ -25,6 +25,10 @@ describe("extractComponents", () => {
     ]);
   });
 
+  it("skips React context objects", () => {
+    expect(components.map((c) => c.name)).not.toContain("ThemeContext");
+  });
+
   it("extracts own props without React HTML attributes", () => {
     expect(get("Button").props.map((p) => p.name)).toEqual(["ghostly", "onClick", "size", "type"]);
     expect(get("Button").extendsHtmlAttributes).toBe(true);

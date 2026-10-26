@@ -48,6 +48,8 @@ export function extractComponents(opts: ExtractOptions): ComponentEntry[] {
 
   /** The props type of a component-like type, or undefined if it is not a component. */
   const propsTypeOf = (type: Type, at: Node): Type | undefined => {
+    // React Context objects expose callable Provider/Consumer but are not components.
+    if (type.getProperty("Provider") && type.getProperty("Consumer")) return undefined;
     const signatures = [...type.getCallSignatures(), ...type.getConstructSignatures()];
     for (const sig of signatures) {
       const param = sig.getParameters()[0];

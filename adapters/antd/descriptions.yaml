@@ -1,0 +1,454 @@
+# Descriptions adapted from the Ant Design documentation (MIT). See ATTRIBUTION.md.
+Affix:
+  description: "Pins an element to the viewport while the page scrolls."
+  category: navigation
+Alert:
+  description: "Inline banner for info, success, warning or error messages."
+  category: feedback
+Alert.ErrorBoundary:
+  description: "Catches render errors in its children and shows them as an Alert."
+  category: feedback
+Anchor:
+  description: "Table of contents that jumps to and tracks sections of the page."
+  category: navigation
+Anchor.Link:
+  description: "One link entry inside an Anchor."
+  category: navigation
+App:
+  description: "Wrapper that provides context for static message, notification and modal calls."
+  category: other
+AutoComplete:
+  description: "Text input with a dropdown of suggestions while typing."
+  category: data-entry
+AutoComplete.Option:
+  description: "Deprecated option element for AutoComplete; pass options instead."
+  category: data-entry
+Avatar:
+  description: "Circular or square image, icon or initials representing a user."
+  category: data-display
+Avatar.Group:
+  description: "Stacks several Avatars together, with an overflow counter."
+  category: data-display
+BackTop:
+  description: "Deprecated button that scrolls the page to the top; use FloatButton.BackTop."
+  category: other
+Badge:
+  description: "Small count or dot marker attached to an element."
+  category: data-display
+Badge.Ribbon:
+  description: "Ribbon-shaped label attached to the corner of a card or block."
+  category: data-display
+BorderBeam:
+  description: "Animated light beam that travels along the border of a container."
+  category: other
+Breadcrumb:
+  description: "Shows the current page location in the site hierarchy."
+  category: navigation
+Breadcrumb.Item:
+  description: "Deprecated breadcrumb entry; pass items instead."
+  category: navigation
+Breadcrumb.Separator:
+  description: "Custom separator between breadcrumb entries."
+  category: navigation
+Button:
+  description: "Clickable button that triggers an action."
+  category: general
+Button.Group:
+  description: "Deprecated wrapper that joins buttons; use Space.Compact."
+  category: general
+Calendar:
+  description: "Full-size calendar for showing and picking dates."
+  category: data-display
+Card:
+  description: "Bordered container with an optional title and extra area."
+  category: data-display
+Card.Grid:
+  description: "Grid cell laid out inside a Card."
+  category: data-display
+Card.Meta:
+  description: "Avatar, title and description block for the body of a Card."
+  category: data-display
+Carousel:
+  description: "Rotating slideshow of content panels."
+  category: data-display
+Cascader:
+  description: "Select that drills through hierarchical options level by level."
+  category: data-entry
+Cascader.Panel:
+  description: "Inline cascading option panel without a dropdown."
+  category: data-entry
+Checkbox:
+  description: "Checkbox for toggling a boolean or picking several options."
+  category: data-entry
+Checkbox.Group:
+  description: "Group of checkboxes bound to an array of selected values."
+  category: data-entry
+Col:
+  description: "Column of the 24-part grid inside a Row."
+  category: layout
+Collapse:
+  description: "Accordion of panels that expand and collapse."
+  category: data-display
+Collapse.Panel:
+  description: "Deprecated single collapse panel; pass items instead."
+  category: data-display
+ColorPicker:
+  description: "Color selection control with palette, presets and format switching."
+  category: data-entry
+ConfigProvider:
+  description: "Global configuration for theme tokens, locale, size and direction."
+  category: other
+DatePicker:
+  description: "Input for picking a date, with a popup calendar."
+  category: data-entry
+DatePicker.MonthPicker:
+  description: "DatePicker preset for picking a month."
+  category: data-entry
+DatePicker.QuarterPicker:
+  description: "DatePicker preset for picking a quarter."
+  category: data-entry
+DatePicker.RangePicker:
+  description: "Picks a start and end date."
+  category: data-entry
+DatePicker.TimePicker:
+  description: "Time selection inside the DatePicker family."
+  category: data-entry
+DatePicker.WeekPicker:
+  description: "DatePicker preset for picking a week."
+  category: data-entry
+DatePicker.YearPicker:
+  description: "DatePicker preset for picking a year."
+  category: data-entry
+Descriptions:
+  description: "Read-only list of label and value pairs, such as record details."
+  category: data-display
+Descriptions.Item:
+  description: "Deprecated single label and value entry; pass items instead."
+  category: data-display
+Divider:
+  description: "Thin line separating sections of content, optionally with a title."
+  category: layout
+Drawer:
+  description: "Panel sliding in from a screen edge for secondary content or forms."
+  category: feedback
+Dropdown:
+  description: "Floating menu of actions shown on hover or click of a trigger."
+  category: navigation
+Dropdown.Button:
+  description: "Button with an attached dropdown menu of related actions."
+  category: general
+Empty:
+  description: "Placeholder shown when there is no data."
+  category: data-display
+Flex:
+  description: "Flexbox container with gap, direction and alignment props."
+  category: layout
+FloatButton:
+  description: "Round action button floating above the page content."
+  category: general
+FloatButton.BackTop:
+  description: "Floating button that scrolls the page to the top."
+  category: general
+FloatButton.Group:
+  description: "Stacks several FloatButtons, optionally as an expandable menu."
+  category: general
+Form:
+  description: "Form container with layout, validation and value collection."
+  category: data-entry
+Form.ErrorList:
+  description: "Renders validation errors for a Form.List."
+  category: data-entry
+Form.Item:
+  description: "Form field wrapper with label, validation rules and help text."
+  category: data-entry
+Form.List:
+  description: "Manages a dynamic list of repeated form fields."
+  category: data-entry
+Form.Provider:
+  description: "Shares form submission events across nested forms."
+  category: data-entry
+Image:
+  description: "Image with placeholder, fallback and click-to-preview."
+  category: data-display
+Image.PreviewGroup:
+  description: "Groups Images so the preview can step through them."
+  category: data-display
+Input:
+  description: "Single-line text input."
+  category: data-entry
+Input.Group:
+  description: "Deprecated input grouping; use Space.Compact."
+  category: data-entry
+Input.OTP:
+  description: "One-time passcode input split into separate cells."
+  category: data-entry
+Input.Password:
+  description: "Text input that masks the value with a visibility toggle."
+  category: data-entry
+Input.Search:
+  description: "Text input with a search button."
+  category: data-entry
+Input.TextArea:
+  description: "Multi-line text input."
+  category: data-entry
+InputNumber:
+  description: "Numeric input with step buttons, min, max and precision."
+  category: data-entry
+Layout:
+  description: "Page shell with Header, Sider, Content and Footer regions."
+  category: layout
+Layout.Content:
+  description: "Main content region of a Layout."
+  category: layout
+Layout.Footer:
+  description: "Footer region of a Layout."
+  category: layout
+Layout.Header:
+  description: "Header region of a Layout."
+  category: layout
+Layout.Sider:
+  description: "Collapsible side region of a Layout, usually holding navigation."
+  category: layout
+List:
+  description: "Vertical list of items with optional pagination."
+  category: data-display
+List.Item:
+  description: "Single row of a List."
+  category: data-display
+Listy:
+  description: "Virtualized list for very long collections."
+  category: data-display
+Masonry:
+  description: "Waterfall layout that packs items of unequal height into columns."
+  category: layout
+Mentions:
+  description: "Text area that suggests items when typing a trigger such as @."
+  category: data-entry
+Menu:
+  description: "Vertical or horizontal navigation menu with nesting."
+  category: navigation
+Menu.Divider:
+  description: "Divider line between menu entries."
+  category: navigation
+Menu.Item:
+  description: "Deprecated menu entry; pass items instead."
+  category: navigation
+Menu.ItemGroup:
+  description: "Deprecated titled group of menu entries; pass items instead."
+  category: navigation
+Menu.SubMenu:
+  description: "Deprecated nested menu; pass items instead."
+  category: navigation
+Modal:
+  description: "Dialog overlay for focused tasks and confirmations."
+  category: feedback
+Pagination:
+  description: "Page switcher for long lists and tables."
+  category: navigation
+Popconfirm:
+  description: "Small confirmation bubble attached to the element that triggers an action."
+  category: feedback
+Popover:
+  description: "Floating card with rich content shown on hover or click."
+  category: data-display
+Progress:
+  description: "Progress of an operation as a bar, circle or dashboard gauge."
+  category: feedback
+QRCode:
+  description: "Renders a QR code for a text or URL value."
+  category: data-display
+Radio:
+  description: "Radio button for choosing one option."
+  category: data-entry
+Radio.Button:
+  description: "Button-styled radio option inside a Radio.Group."
+  category: data-entry
+Radio.Group:
+  description: "Group of radios bound to a single selected value."
+  category: data-entry
+Rate:
+  description: "Star rating input."
+  category: data-entry
+Result:
+  description: "Full-block outcome page for success, failure or other statuses."
+  category: feedback
+Result.PRESENTED_IMAGE_403:
+  description: "Built-in 403 illustration for Result."
+  category: feedback
+Result.PRESENTED_IMAGE_404:
+  description: "Built-in 404 illustration for Result."
+  category: feedback
+Result.PRESENTED_IMAGE_500:
+  description: "Built-in 500 illustration for Result."
+  category: feedback
+Row:
+  description: "Row of the 24-part grid that holds Col elements."
+  category: layout
+Segmented:
+  description: "Segmented control to pick one option from a short list."
+  category: data-entry
+Select:
+  description: "Dropdown to pick one or several options from a list."
+  category: data-entry
+Select.OptGroup:
+  description: "Deprecated option group for Select; pass grouped options instead."
+  category: data-entry
+Select.Option:
+  description: "Deprecated option element for Select; pass options instead."
+  category: data-entry
+Skeleton:
+  description: "Gray placeholder blocks shown while content loads."
+  category: feedback
+Skeleton.Avatar:
+  description: "Avatar-shaped skeleton placeholder."
+  category: feedback
+Skeleton.Button:
+  description: "Button-shaped skeleton placeholder."
+  category: feedback
+Skeleton.Image:
+  description: "Image-shaped skeleton placeholder."
+  category: feedback
+Skeleton.Input:
+  description: "Input-shaped skeleton placeholder."
+  category: feedback
+Skeleton.Node:
+  description: "Skeleton placeholder wrapping custom content."
+  category: feedback
+Slider:
+  description: "Slider for picking a number or a range along a track."
+  category: data-entry
+Space:
+  description: "Even gaps between inline or stacked children."
+  category: layout
+Space.Addon:
+  description: "Addon cell attached to a compact Space group."
+  category: layout
+Space.Compact:
+  description: "Joins adjacent controls such as an Input and a Button into one group."
+  category: layout
+Spin:
+  description: "Loading spinner that can wrap content."
+  category: feedback
+Splitter:
+  description: "Resizable split panes."
+  category: layout
+Splitter.Panel:
+  description: "One pane inside a Splitter."
+  category: layout
+Statistic:
+  description: "Highlighted number with a title, prefix and suffix, as in a KPI."
+  category: data-display
+Statistic.Countdown:
+  description: "Deprecated countdown display; use Statistic.Timer."
+  category: data-display
+Statistic.Timer:
+  description: "Statistic that counts down or up to a time."
+  category: data-display
+Steps:
+  description: "Step indicator for a multi-step process."
+  category: navigation
+Switch:
+  description: "On and off toggle."
+  category: data-entry
+Table:
+  description: "Table that renders rows of data in columns, with sorting and pagination."
+  category: data-display
+Table.Column:
+  description: "Deprecated column definition; pass columns instead."
+  category: data-display
+Table.ColumnGroup:
+  description: "Deprecated grouped table header; pass nested columns instead."
+  category: data-display
+Table.Summary:
+  description: "Summary row at the bottom of a Table."
+  category: data-display
+Tabs:
+  description: "Tabbed panes that switch between views of content."
+  category: navigation
+Tabs.TabPane:
+  description: "Deprecated single tab pane; pass items instead."
+  category: navigation
+Tag:
+  description: "Small label for categories, statuses or keywords."
+  category: data-display
+Tag.CheckableTag:
+  description: "Tag that can be toggled on and off."
+  category: data-display
+Tag.CheckableTagGroup:
+  description: "Group of checkable tags bound to selected values."
+  category: data-display
+TimePicker:
+  description: "Input for picking a time of day."
+  category: data-entry
+TimePicker.RangePicker:
+  description: "Picks a start and end time."
+  category: data-entry
+Timeline:
+  description: "Vertical timeline of events."
+  category: data-display
+Timeline.Item:
+  description: "Deprecated timeline entry; pass items instead."
+  category: data-display
+Tooltip:
+  description: "Short text hint shown on hover or focus of an element."
+  category: data-display
+Tooltip.UniqueProvider:
+  description: "Shares one tooltip instance across many triggers."
+  category: data-display
+Tour:
+  description: "Step-by-step guided walkthrough that highlights parts of the page."
+  category: other
+Transfer:
+  description: "Two-column list for moving items between sets."
+  category: data-entry
+Transfer.List:
+  description: "Single list column of a Transfer."
+  category: data-entry
+Transfer.Operation:
+  description: "Move buttons between the Transfer columns."
+  category: data-entry
+Transfer.Search:
+  description: "Search box inside a Transfer list."
+  category: data-entry
+Tree:
+  description: "Hierarchical tree with expand, select and check."
+  category: data-display
+Tree.DirectoryTree:
+  description: "Tree styled like a file explorer."
+  category: data-display
+Tree.TreeNode:
+  description: "Deprecated tree node; pass treeData instead."
+  category: data-display
+TreeSelect:
+  description: "Select whose options form a tree."
+  category: data-entry
+TreeSelect.TreeNode:
+  description: "Deprecated tree option; pass treeData instead."
+  category: data-entry
+Typography:
+  description: "Text styles container for headings, paragraphs and links."
+  category: general
+Typography.Link:
+  description: "Styled text link with ellipsis and copy support."
+  category: general
+Typography.Paragraph:
+  description: "Paragraph with ellipsis, copy and edit support."
+  category: general
+Typography.Text:
+  description: "Inline text with type colors, strong, code and ellipsis."
+  category: general
+Typography.Title:
+  description: "Heading from level 1 to 5."
+  category: general
+Upload:
+  description: "File upload with a list, drag and drop, and progress."
+  category: data-entry
+Upload.Dragger:
+  description: "Upload area that accepts dropped files."
+  category: data-entry
+Watermark:
+  description: "Overlays a repeated mark such as a name on content."
+  category: other
+Mentions.Option:
+  description: "Deprecated option element for Mentions; pass options instead."
+  category: data-entry
