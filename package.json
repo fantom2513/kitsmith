@@ -1,0 +1,44 @@
+{
+  "name": "kitsmith",
+  "version": "0.1.0",
+  "description": "Kit-agnostic MCP server and CLI that helps coding agents build UI from a React kit",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "kitsmith": "dist/cli.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "adapters",
+    "templates"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "@typescript-eslint/parser": "^8.72.0",
+    "commander": "^15.0.0",
+    "eslint": "^9.39.5",
+    "gray-matter": "^4.0.3",
+    "jiti": "^2.7.0",
+    "minisearch": "^7.2.0",
+    "ts-morph": "^28.0.0",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "antd": "^6.6.8",
+    "react": "^19.3.1",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
+  }
+}

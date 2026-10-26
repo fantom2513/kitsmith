@@ -1,0 +1,18 @@
+Button:
+  description: Clickable button that triggers an action.
+  category: general
+Segmented:
+  description: Segmented control to pick one option from a short list.
+  category: data-entry
+Card:
+  description: Bordered container with an optional title and extra area.
+  category: data-display
+Input:
+  description: Single-line text input.
+  category: data-entry
+Table:
+  description: Table that renders rows of data in columns.
+  category: data-display
+OldTable:
+  description: Legacy table, replaced by Table.
+  category: data-display
