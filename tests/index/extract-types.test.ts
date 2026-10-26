@@ -1,10 +1,9 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { extractComponents } from "../../src/index/extract-types.js";
 import type { ComponentEntry } from "../../src/index/types.js";
+import { copyFixtureProject } from "../helpers/temp-project.js";
 
 const projectDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -52,22 +51,15 @@ describe("extractComponents", () => {
 
 describe("extractComponents with a space in the project path", () => {
   it("finds the same components", () => {
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "kit smith "));
+    const { dir: copy, cleanup } = copyFixtureProject();
     try {
-      const copy = path.join(tmp, "my project");
-      fs.cpSync(projectDir, copy, { recursive: true });
-      const repoModules = path.resolve(projectDir, "../../../node_modules");
-      fs.mkdirSync(path.join(copy, "node_modules", "@types"), { recursive: true });
-      fs.symlinkSync(path.join(repoModules, "react"), path.join(copy, "node_modules", "react"), "junction");
-      fs.symlinkSync(path.join(repoModules, "@types", "react"), path.join(copy, "node_modules", "@types", "react"), "junction");
-
       const result = extractComponents({ projectDir: copy, packageName: "mini-kit", typesEntry: "index.d.ts" });
       expect(result.map((c) => c.name)).toEqual(components.map((c) => c.name));
       const button = result.find((c) => c.name === "Button")!;
       expect(button.props.map((p) => p.name)).toEqual(["ghostly", "onClick", "size", "type"]);
       expect(button.extendsHtmlAttributes).toBe(true);
     } finally {
-      fs.rmSync(tmp, { recursive: true, force: true });
+      cleanup();
     }
   });
 });
