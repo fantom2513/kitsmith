@@ -2,14 +2,17 @@ import { Link } from "react-router";
 import { routes } from "../routes";
 
 export function Home() {
-  const pages = routes.filter((r) => (r.handle as { title?: string } | undefined)?.title && r.path !== "/");
+  const pages = routes.flatMap((r) => {
+    const title = (r.handle as { title?: string } | undefined)?.title;
+    return title && r.path && r.path !== "/" ? [{ path: r.path, title }] : [];
+  });
   return (
     <main>
       <h1>Prototype</h1>
       <ul>
-        {pages.map((r) => (
-          <li key={r.path}>
-            <Link to={r.path!}>{(r.handle as { title: string }).title}</Link>
+        {pages.map((p) => (
+          <li key={p.path}>
+            <Link to={p.path}>{p.title}</Link>
           </li>
         ))}
       </ul>

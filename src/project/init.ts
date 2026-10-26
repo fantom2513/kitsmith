@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import { loadAdapter } from "../adapter/load.js";
 import { renderLadder } from "../server/ladder.js";
 
+export class InitError extends Error {}
+
 const START = "<!-- kitsmith:start -->";
 const END = "<!-- kitsmith:end -->";
 
@@ -52,7 +54,7 @@ export async function initProject(opts: { projectDir: string; adapterDir: string
     try {
       mcp = JSON.parse(mcpText);
     } catch {
-      throw new Error(`Cannot parse ${mcpFile}; fix or remove it and run init again.`);
+      throw new InitError(`Cannot parse ${mcpFile}; fix or remove it and run init again.`);
     }
   }
   mcp.mcpServers = { ...mcp.mcpServers, kitsmith: { command: "npx", args: ["kitsmith", "serve", "--project", "."] } };

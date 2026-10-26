@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import type { LoadedAdapter } from "../adapter/types.js";
 import { loadAdapter } from "../adapter/load.js";
 import { initProject } from "./init.js";
 
@@ -16,6 +17,21 @@ const LAYOUT_SECTION = `## Prototype layout
 - Run \`npm run dev\` to look at it; \`npm run build\` type-checks and builds.
 `;
 
+export class PrototypeNameError extends Error {}
+export class TargetDirError extends Error {}
+export class PrototypeConfigError extends Error {}
+export class InstallError extends Error {}
+
+const NAME_RE = /^[a-z0-9][a-z0-9._-]*$/;
+
+function validateName(name: string): void {
+  if (name.length > 214 || !NAME_RE.test(name) || name.includes("..")) {
+    throw new PrototypeNameError(
+      `Invalid prototype name "${name}": use lowercase letters, digits, "-", "_" or "." (no path separators, no "..").`,
+    );
+  }
+}
+
 function runInstall(cwd: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn("npm", ["install"], { cwd, stdio: "inherit", shell: process.platform === "win32" });
@@ -29,14 +45,40 @@ export async function createPrototype(opts: {
   adapterDir: string;
   parentDir: string;
   install: boolean;
+  /** Test seam: replaces `npm install`. */
+  installer?: (dir: string) => Promise<void>;
 }): Promise<{ dir: string }> {
+  validateName(opts.name);
   const dir = path.resolve(opts.parentDir, opts.name);
   if (fs.existsSync(dir) && fs.readdirSync(dir).length > 0) {
-    throw new Error(`Target directory ${dir} already exists and is not empty.`);
+    throw new TargetDirError(`Target directory ${dir} already exists and is not empty.`);
   }
   const adapterDir = path.resolve(opts.adapterDir);
   const adapter = await loadAdapter(adapterDir);
 
+  const dirExisted = fs.existsSync(dir);
+  try {
+    await generate(dir, adapterDir, adapter, opts.name);
+  } catch (e) {
+    // Remove only what this call created; the pre-existing empty dir stays.
+    if (dirExisted) for (const entry of fs.readdirSync(dir)) fs.rmSync(path.join(dir, entry), { recursive: true, force: true });
+    else fs.rmSync(dir, { recursive: true, force: true });
+    throw e;
+  }
+
+  if (opts.install) {
+    try {
+      await (opts.installer ?? runInstall)(dir);
+    } catch (e) {
+      throw new InstallError(
+        `Prototype created at ${dir}, but dependency install failed (${e instanceof Error ? e.message : String(e)}). Run \`npm install\` there manually.`,
+      );
+    }
+  }
+  return { dir };
+}
+
+async function generate(dir: string, adapterDir: string, adapter: LoadedAdapter, name: string): Promise<void> {
   fs.mkdirSync(dir, { recursive: true });
   fs.cpSync(templateDir, dir, { recursive: true });
 
@@ -44,15 +86,17 @@ export async function createPrototype(opts: {
   if (sandbox) fs.cpSync(path.resolve(adapterDir, sandbox.overlay), dir, { recursive: true });
 
   const pkgFile = path.join(dir, "package.json");
-  const pkg = JSON.parse(fs.readFileSync(pkgFile, "utf8")) as { name: string; dependencies?: Record<string, string> };
-  pkg.name = opts.name;
+  let pkg: { name: string; dependencies?: Record<string, string> };
+  try {
+    pkg = JSON.parse(fs.readFileSync(pkgFile, "utf8"));
+  } catch {
+    throw new PrototypeConfigError(`Cannot parse ${pkgFile} in the sandbox template.`);
+  }
+  pkg.name = name;
   pkg.dependencies = { ...pkg.dependencies, ...sandbox?.dependencies };
   fs.writeFileSync(pkgFile, JSON.stringify(pkg, null, 2) + "\n");
 
   await initProject({ projectDir: dir, adapterDir });
   const agents = path.join(dir, "AGENTS.md");
   fs.writeFileSync(agents, `${fs.readFileSync(agents, "utf8").replace(/\s*$/, "")}\n\n${LAYOUT_SECTION}`);
-
-  if (opts.install) await runInstall(dir);
-  return { dir };
 }

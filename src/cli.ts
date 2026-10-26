@@ -6,7 +6,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { AdapterLoadError, loadAdapter } from "./adapter/load.js";
 import { KitNotInstalledError, loadOrBuildIndex } from "./index/build.js";
 import { initProject } from "./project/init.js";
-import { createPrototype } from "./project/new.js";
+import { InitError } from "./project/init.js";
+import { createPrototype, InstallError, PrototypeConfigError, PrototypeNameError, TargetDirError } from "./project/new.js";
 import { buildContext } from "./server/context.js";
 import { createServer } from "./server/server.js";
 import { TypecheckConfigError } from "./validate/typecheck.js";
@@ -94,10 +95,10 @@ program
 Next: cd ${dir} && npm run dev`);
   });
 
-const KNOWN_ERRORS = [UsageError, AdapterLoadError, KitNotInstalledError, TypecheckConfigError];
+const KNOWN_ERRORS = [UsageError, AdapterLoadError, KitNotInstalledError, TypecheckConfigError, InitError, PrototypeNameError, TargetDirError, PrototypeConfigError, InstallError];
 
 program.parseAsync(process.argv).catch((e: unknown) => {
-  const known = KNOWN_ERRORS.some((C) => e instanceof C) || (e instanceof Error && /^(Cannot parse |Target directory |npm install failed)/.test(e.message));
+  const known = KNOWN_ERRORS.some((C) => e instanceof C);
   if (known) console.error(`kitsmith: ${(e as Error).message}`);
   else console.error(`kitsmith: unexpected error: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`);
   process.exit(1);
