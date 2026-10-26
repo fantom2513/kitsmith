@@ -8,6 +8,9 @@ interface JsxNameNode {
   property?: JsxNameNode;
 }
 export interface JsxElementNode {
+  type?: string;
+  parent?: any;
+  children?: any[];
   name: JsxNameNode;
   attributes: Array<{ type: string; name?: { name?: string }; value?: any }>;
 }
@@ -43,6 +46,13 @@ export interface RuleHelpers {
   /** True if the element's root identifier is imported from a settings.kitsmith.allowedExternal package. */
   isAllowedExternal(context: Context, node: JsxElementNode): boolean;
   getAttr(node: JsxElementNode, name: string): JsxElementNode["attributes"][number] | undefined;
+  /**
+   * Direct JSX element children of the element (accepts the opening element or the JSXElement),
+   * returned as opening elements so jsxName/getAttr work on them. Text, whitespace and expression containers are skipped.
+   */
+  childElements(node: JsxElementNode): JsxElementNode[];
+  /** ESTree type of the attribute's expression ("ConditionalExpression", "Literal" for plain strings); undefined if absent. */
+  attrExpressionType(node: JsxElementNode, name: string): string | undefined;
   /** Keys of an inline object literal passed as style={{ ... }}. */
   styleKeys(node: JsxElementNode): string[];
 }
@@ -80,6 +90,18 @@ export const ruleHelpers: RuleHelpers = {
   },
 
   getAttr: (node, name) => node.attributes.find((a) => a.type === "JSXAttribute" && a.name?.name === name),
+
+  childElements(node) {
+    const element = node.type === "JSXOpeningElement" ? node.parent : node;
+    const kids: any[] = element?.children ?? [];
+    return kids.filter((c) => c.type === "JSXElement").map((c) => c.openingElement as JsxElementNode);
+  },
+
+  attrExpressionType(node, name) {
+    const v = ruleHelpers.getAttr(node, name)?.value;
+    if (!v) return undefined;
+    return v.type === "JSXExpressionContainer" ? v.expression?.type : v.type;
+  },
 
   styleKeys(node) {
     const attr = ruleHelpers.getAttr(node, "style");

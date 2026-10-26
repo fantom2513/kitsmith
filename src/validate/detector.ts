@@ -36,11 +36,13 @@ export function runDetector(projectDir: string, files: string[], adapter: Loaded
     }
 
     let parseErrorReported = false;
-    for (const r of adapter.rules) {
+    // With no rules we still run one parse-only pass so syntax errors are reported.
+    for (const r of adapter.rules.length > 0 ? adapter.rules : [undefined]) {
       const config = [
         {
           files: ["**/*.{js,jsx,ts,tsx,mjs,cjs,mts,cts}"],
-          plugins: { kitsmith: { rules: { [r.id]: r.rule } } },
+          plugins: { kitsmith: { rules: r ? { [r.id]: r.rule } : {} } },
+          linterOptions: { noInlineConfig: true, reportUnusedDisableDirectives: "off" },
           languageOptions: {
             parser: tsParser,
             parserOptions: { ecmaFeatures: { jsx: true } },
@@ -48,7 +50,7 @@ export function runDetector(projectDir: string, files: string[], adapter: Loaded
           settings: {
             kitsmith: { kitPackage: adapter.config.package, allowedExternal: adapter.config.allowedExternal ?? [] },
           },
-          rules: { [`kitsmith/${r.id}`]: "error" },
+          rules: r ? { [`kitsmith/${r.id}`]: "error" } : {},
         },
       ] as Linter.Config[];
 
@@ -61,7 +63,7 @@ export function runDetector(projectDir: string, files: string[], adapter: Loaded
           line: 1,
           column: 1,
           ruleId: "kitsmith/rule-error",
-          message: `Rule "${r.id}" crashed: ${(e as Error).message}`,
+          message: `Rule "${r?.id}" crashed: ${(e as Error).message}`,
           suggest: "",
         });
         continue;
@@ -82,6 +84,8 @@ export function runDetector(projectDir: string, files: string[], adapter: Loaded
           }
           continue;
         }
+        // Ignore anything not produced by this rule (foreign directives, config messages).
+        if (!r || m.ruleId !== `kitsmith/${r.id}`) continue;
         findings.push({
           file,
           line: m.line,
