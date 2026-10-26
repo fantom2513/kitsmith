@@ -12,22 +12,80 @@ export interface TypeFinding {
 
 const DEPRECATED_CODES = new Set([6385, 6387]);
 
-interface Project {
-  service: ts.LanguageService;
-  program: ts.Program;
+export class TypecheckConfigError extends Error {
+  constructor(
+    public readonly tsconfigPath: string,
+    detail: string,
+  ) {
+    super(`Cannot typecheck: ${detail} (${tsconfigPath})`);
+    this.name = "TypecheckConfigError";
+  }
 }
 
-function createProject(projectDir: string): Project {
-  const configPath = path.join(projectDir, "tsconfig.json");
+interface ResolvedConfig {
+  options: ts.CompilerOptions;
+  fileNames: string[];
+}
+
+const NO_INPUTS = 18003;
+
+function parseConfigFile(configPath: string): { parsed: ts.ParsedCommandLine; raw: any } {
+  if (!ts.sys.fileExists(configPath)) throw new TypecheckConfigError(configPath, "tsconfig.json not found");
   const read = ts.readConfigFile(configPath, ts.sys.readFile);
   if (read.error) {
-    throw new Error(ts.flattenDiagnosticMessageText(read.error.messageText, " "));
+    throw new TypecheckConfigError(configPath, ts.flattenDiagnosticMessageText(read.error.messageText, " "));
   }
-  const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, projectDir);
+  const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, path.dirname(configPath), undefined, configPath);
+  const blocking = parsed.errors.filter((e) => e.code !== NO_INPUTS);
+  if (blocking.length > 0) {
+    throw new TypecheckConfigError(
+      configPath,
+      blocking.map((e) => ts.flattenDiagnosticMessageText(e.messageText, " ")).join("; "),
+    );
+  }
+  return { parsed, raw: read.config };
+}
+
+/** Reads tsconfig.json; for solution-style configs (references) uses the referenced configs. */
+function resolveConfig(projectDir: string): ResolvedConfig {
+  const configPath = path.join(projectDir, "tsconfig.json");
+  const { parsed } = parseConfigFile(configPath);
+  let options = parsed.options;
+  const fileNames = new Set(parsed.fileNames);
+  for (const ref of parsed.projectReferences ?? []) {
+    const refPath = ts.sys.directoryExists(ref.path) ? path.join(ref.path, "tsconfig.json") : ref.path;
+    const child = parseConfigFile(refPath).parsed;
+    if (child.fileNames.length > 0 && fileNames.size === 0) options = child.options;
+    child.fileNames.forEach((f) => fileNames.add(f));
+  }
+  if (fileNames.size === 0) {
+    throw new TypecheckConfigError(configPath, "no source files matched by tsconfig include/files/references");
+  }
+  return { options, fileNames: [...fileNames] };
+}
+
+interface Project {
+  service: ts.LanguageService;
+  config: ResolvedConfig;
+}
+
+const registry = ts.createDocumentRegistry();
+let cached: { dir: string; project: Project } | undefined;
+
+const mtime = (f: string) => String(ts.sys.getModifiedTime?.(f)?.getTime() ?? 0);
+
+function createProject(projectDir: string): Project {
+  const config = resolveConfig(projectDir);
+  const key = path.resolve(projectDir);
+  if (cached?.dir === key) {
+    cached.project.config = config; // new/removed files and option changes picked up
+    return cached.project;
+  }
+  const project: Project = { config, service: undefined as unknown as ts.LanguageService };
   const host: ts.LanguageServiceHost = {
-    getCompilationSettings: () => parsed.options,
-    getScriptFileNames: () => parsed.fileNames,
-    getScriptVersion: () => "0",
+    getCompilationSettings: () => project.config.options,
+    getScriptFileNames: () => project.config.fileNames,
+    getScriptVersion: mtime,
     getScriptSnapshot: (f) => {
       const text = ts.sys.readFile(f);
       return text === undefined ? undefined : ts.ScriptSnapshot.fromString(text);
@@ -40,8 +98,9 @@ function createProject(projectDir: string): Project {
     directoryExists: ts.sys.directoryExists,
     getDirectories: ts.sys.getDirectories,
   };
-  const service = ts.createLanguageService(host, ts.createDocumentRegistry());
-  return { service, program: service.getProgram()! };
+  project.service = ts.createLanguageService(host, registry);
+  cached = { dir: key, project };
+  return project;
 }
 
 function isInImport(sf: ts.SourceFile, pos: number): boolean {
@@ -56,7 +115,11 @@ const toRel = (projectDir: string, file: string) =>
   path.relative(projectDir, file).split(path.sep).join("/");
 
 export function runTypecheck(projectDir: string, files?: string[]): TypeFinding[] {
-  const { service, program } = createProject(projectDir);
+  const { service, config } = createProject(projectDir);
+  const known = new Set(config.fileNames.map((f) => toRel(projectDir, f)));
+  const wantedEarly = files?.map((f) => toRel(projectDir, path.resolve(projectDir, f)));
+  if (wantedEarly && !wantedEarly.some((f) => known.has(f))) return [];
+  const program = service.getProgram()!;
   const wanted = files
     ? new Set(files.map((f) => toRel(projectDir, path.resolve(projectDir, f))))
     : undefined;
