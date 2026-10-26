@@ -29,21 +29,28 @@ interface ResolvedConfig {
 
 const NO_INPUTS = 18003;
 
-function parseConfigFile(configPath: string): { parsed: ts.ParsedCommandLine; raw: any } {
+function parseConfigFile(rawPath: string): { parsed: ts.ParsedCommandLine; raw: any } {
+  // TypeScript expects forward slashes; mixed separators trigger internal assertions on Windows.
+  const configPath = rawPath.split(path.sep).join("/");
   if (!ts.sys.fileExists(configPath)) throw new TypecheckConfigError(configPath, "tsconfig.json not found");
-  const read = ts.readConfigFile(configPath, ts.sys.readFile);
-  if (read.error) {
-    throw new TypecheckConfigError(configPath, ts.flattenDiagnosticMessageText(read.error.messageText, " "));
+  try {
+    const read = ts.readConfigFile(configPath, ts.sys.readFile);
+    if (read.error) {
+      throw new TypecheckConfigError(configPath, ts.flattenDiagnosticMessageText(read.error.messageText, " "));
+    }
+    const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, path.posix.dirname(configPath), undefined, configPath);
+    const blocking = parsed.errors.filter((e) => e.code !== NO_INPUTS);
+    if (blocking.length > 0) {
+      throw new TypecheckConfigError(
+        configPath,
+        blocking.map((e) => ts.flattenDiagnosticMessageText(e.messageText, " ")).join("; "),
+      );
+    }
+    return { parsed, raw: read.config };
+  } catch (e) {
+    if (e instanceof TypecheckConfigError) throw e;
+    throw new TypecheckConfigError(configPath, e instanceof Error ? e.message : String(e));
   }
-  const parsed = ts.parseJsonConfigFileContent(read.config, ts.sys, path.dirname(configPath), undefined, configPath);
-  const blocking = parsed.errors.filter((e) => e.code !== NO_INPUTS);
-  if (blocking.length > 0) {
-    throw new TypecheckConfigError(
-      configPath,
-      blocking.map((e) => ts.flattenDiagnosticMessageText(e.messageText, " ")).join("; "),
-    );
-  }
-  return { parsed, raw: read.config };
 }
 
 /** Reads tsconfig.json; for solution-style configs (references) uses the referenced configs. */

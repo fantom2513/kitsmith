@@ -6,7 +6,7 @@ import { findRecipe, getGuideline } from "../docs/docs.js";
 import { formatReport, validateProject } from "../validate/validate.js";
 import type { ServerContext } from "./context.js";
 import { formatComponent, formatDoc, formatHits, formatList, formatTokens } from "./format.js";
-import { renderLadder } from "./ladder.js";
+import { ladderFindSentence, ladderPropsSentence, ladderValidateSentence, renderLadder } from "./ladder.js";
 
 type ToolResult = { content: { type: "text"; text: string }[]; isError?: boolean };
 
@@ -30,7 +30,7 @@ export function createServer(ctx: ServerContext): McpServer {
   server.registerTool(
     "find_component",
     {
-      description: `Find ${kit} components matching a UI intent, ranked by relevance. Call find_component before writing any UI element by hand.`,
+      description: `Find ${kit} components matching a UI intent, ranked by relevance. ${ladderFindSentence()}`,
       inputSchema: { intent: z.string(), limit: z.number().int().positive().optional() },
     },
     ({ intent, limit }) => safe(() => formatHits(search.find(intent, limit))),
@@ -39,7 +39,7 @@ export function createServer(ctx: ServerContext): McpServer {
   server.registerTool(
     "get_component",
     {
-      description: `Get the exact props, subcomponents and a usage example of a ${kit} component. Check props with get_component instead of guessing.`,
+      description: `Get the exact props, subcomponents and a usage example of a ${kit} component. ${ladderPropsSentence()}`,
       inputSchema: { name: z.string() },
     },
     ({ name }) =>
@@ -111,7 +111,7 @@ export function createServer(ctx: ServerContext): McpServer {
   server.registerTool(
     "validate",
     {
-      description: `Typecheck the project and detect hand-rolled duplicates of ${kit} components. Run validate after editing UI files and fix what it reports.`,
+      description: `Typecheck the project and detect hand-rolled duplicates of ${kit} components. ${ladderValidateSentence()}`,
       inputSchema: { files: z.array(z.string()).optional() },
     },
     ({ files }) => safe(() => formatReport(validateProject(adapter, projectDir, files))),

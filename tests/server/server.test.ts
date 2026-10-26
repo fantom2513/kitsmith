@@ -5,7 +5,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildContext } from "../../src/server/context.js";
 import { createServer } from "../../src/server/server.js";
-import { renderLadder } from "../../src/server/ladder.js";
+import { ladderFindSentence, ladderPropsSentence, ladderValidateSentence, renderLadder } from "../../src/server/ladder.js";
 import { copyFixtureProject, fixtureProjectDir } from "../helpers/temp-project.js";
 
 const adapterDir = path.resolve(fixtureProjectDir, "../mini-kit-adapter");
@@ -49,6 +49,10 @@ describe("mcp server", () => {
       "validate",
     ]);
     for (const t of tools) expect(t.description?.length).toBeGreaterThan(10);
+    const desc = (n: string) => tools.find((t) => t.name === n)!.description!;
+    expect(desc("find_component").endsWith(ladderFindSentence())).toBe(true);
+    expect(desc("get_component").endsWith(ladderPropsSentence())).toBe(true);
+    expect(desc("validate").endsWith(ladderValidateSentence())).toBe(true);
   });
 
   it("server instructions equal the ladder", () => {
@@ -81,17 +85,34 @@ describe("mcp server", () => {
     expect((await call("get_tokens", { prefix: "color" })).text).toBe("colorPrimary: #1677ff");
   });
 
-  it("a thrown error becomes an isError tool result", async () => {
+  it("broken tsconfig yields a non-error report that says the type check was skipped", async () => {
     fs.writeFileSync(path.join(projectDir, "tsconfig.json"), "{ not json");
     try {
-      const res = await call("validate", {});
-      expect(res.isError).toBe(true);
-      expect(res.text.length).toBeGreaterThan(5);
+      const res = await call("validate", { files: ["src/good.tsx"] });
+      expect(res.isError).toBeFalsy();
+      expect(res.text).toContain("Type check skipped");
+      expect(res.text).toContain("but the type check did not run");
+      expect(res.text).toContain("Notes");
     } finally {
       fs.writeFileSync(
         path.join(projectDir, "tsconfig.json"),
         fs.readFileSync(path.join(fixtureProjectDir, "tsconfig.json"), "utf8"),
       );
     }
+  });
+
+  it("a throwing tool becomes an isError result with a readable message", async () => {
+    const ctx = await buildContext(adapterDir, projectDir);
+    ctx.adapter.extractTokens = async () => {
+      throw new Error("boom");
+    };
+    const server = createServer(ctx);
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    const c = new Client({ name: "t2", version: "0" });
+    await Promise.all([server.connect(a), c.connect(b)]);
+    const res = await c.callTool({ name: "get_tokens", arguments: {} });
+    await c.close();
+    expect(res.isError).toBe(true);
+    expect((res.content as { text: string }[])[0].text).toContain("boom");
   });
 });

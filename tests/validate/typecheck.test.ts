@@ -70,4 +70,15 @@ describe("runTypecheck", () => {
       cleanup();
     }
   });
+
+  it("throws TypecheckConfigError for an unparsable tsconfig", () => {
+    const { dir, cleanup } = copyFixtureProject();
+    try {
+      fs.writeFileSync(path.join(dir, "tsconfig.json"), "{ not json");
+      expect(() => runTypecheck(dir)).toThrow(TypecheckConfigError);
+      expect(() => runTypecheck(dir)).toThrow(/tsconfig\.json/);
+    } finally {
+      cleanup();
+    }
+  });
 });
