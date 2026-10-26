@@ -6,6 +6,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { AdapterLoadError, loadAdapter } from "./adapter/load.js";
 import { KitNotInstalledError, loadOrBuildIndex } from "./index/build.js";
 import { initProject } from "./project/init.js";
+import { createPrototype } from "./project/new.js";
 import { buildContext } from "./server/context.js";
 import { createServer } from "./server/server.js";
 import { TypecheckConfigError } from "./validate/typecheck.js";
@@ -80,12 +81,23 @@ program
     else if (!report.complete) process.exitCode = 2;
   });
 
-// `kitsmith new` is wired in Task 11.
+program
+  .command("new")
+  .description("Create a clickable prototype sandbox wired to the kit")
+  .argument("<name>", "project name (also the directory name)")
+  .requiredOption("--adapter <dir>", "adapter directory")
+  .option("--dir <parent>", "parent directory", ".")
+  .option("--no-install", "skip npm install")
+  .action(async (name: string, o: { adapter: string; dir: string; install: boolean }) => {
+    const { dir } = await createPrototype({ name, adapterDir: o.adapter, parentDir: o.dir, install: o.install });
+    console.log(`Created prototype in ${dir}
+Next: cd ${dir} && npm run dev`);
+  });
 
 const KNOWN_ERRORS = [UsageError, AdapterLoadError, KitNotInstalledError, TypecheckConfigError];
 
 program.parseAsync(process.argv).catch((e: unknown) => {
-  const known = KNOWN_ERRORS.some((C) => e instanceof C) || (e instanceof Error && /^Cannot parse /.test(e.message));
+  const known = KNOWN_ERRORS.some((C) => e instanceof C) || (e instanceof Error && /^(Cannot parse |Target directory |npm install failed)/.test(e.message));
   if (known) console.error(`kitsmith: ${(e as Error).message}`);
   else console.error(`kitsmith: unexpected error: ${e instanceof Error ? (e.stack ?? e.message) : String(e)}`);
   process.exit(1);
