@@ -330,3 +330,93 @@ Private adapters are built separately, outside this repo.
 - Whether stage-2 guidelines ship as part of the antd adapter or as a
   kit-independent generic set plus kit overrides.
 - Second kit: MUI or Mantine.
+
+## 12. Design quality track (direction, not yet scheduled)
+
+How kitsmith learns a designer's view of "good" and measurably improves what
+agents generate. Not tied to a maturity stage; the author is still deciding
+where exemplar material comes from.
+
+### 12.1 Teaching material, in order of leverage
+
+1. **Exemplar screens as code.** 5–10 well-built pages on the kit per page
+   type (list with filters, form, entity details, dashboard, wizard, empty
+   states). Agents copy composition, density, action hierarchy and spacing
+   far more precisely from code than from images. Adapter content
+   (`exemplars/`), served by a tool such as `get_exemplar(page_type)`.
+2. **Bad → good pairs with a short annotation.** "All buttons primary" →
+   fixed, and why; "form without loading/error states" → fixed. This is how
+   taste transfers. Stored next to exemplars.
+3. **Critique rubric.** 15–25 checkable items (one primary action per screen;
+   loading/empty/error states present; grid alignment; no wall of identical
+   cards; consistent label tone). Served by a tool; the agent reviews its own
+   screen against it and fixes before finishing.
+4. **Render → screenshot → compare loop.** The agent renders the prototype,
+   takes a screenshot and checks it with its own vision against the rubric and
+   the exemplar's screenshot. Catches what code does not show (overload,
+   rhythm, hierarchy). Token-heavy: once or twice at the end, not per edit.
+5. **Designer feedback through pairwise comparison.** The agent produces 2–3
+   variants; a designer picks one and says why in a sentence. Reasons become
+   rubric items and new bad → good pairs. A separate pairwise-comparison
+   tool is the natural UI for this; integration stays out of scope here.
+
+Anti-patterns: screenshots as primary teaching material (costly, imprecise);
+long prose style guides (followed superficially); rules derived from single
+anecdotes instead of benchmark data and designer choices.
+
+Everything stays inside the existing paradigm: adapter content + tools, no
+host-specific features. Open antd content lives in this repo; a private
+kit's exemplars and rubric live in its adapter outside it.
+
+### 12.2 Reconstruction harness (proposed answer to "where does the code come from")
+
+Designers have screens in Figma; code exemplars are the scarce part. The
+harness turns Figma screens into validated code exemplars and doubles as a
+benchmark:
+
+```
+Figma frame ──export──▶ reference PNG (+ optional node JSON)
+      │
+      ▼
+agent (headless: Claude Code / Codex / OpenCode) + kitsmith MCP
+  in a fresh `kitsmith new` prototype, prompt: "reproduce this screen"
+      │
+      ▼
+render (headless browser, same viewport) ──▶ result PNG
+      │
+      ▼
+compare ──▶ score + diff notes ──(≤ N rounds)──▶ back to the agent
+      │
+      ▼
+designer approves ──▶ code + PNG + annotation saved as an exemplar
+```
+
+Comparison signals, cheapest first:
+- **kitsmith `validate`:** no type errors, no hand-rolled duplicates.
+- **Component inventory:** when node JSON is available, Figma component
+  instances mapped to kit components vs the kit components actually used
+  (precision/recall). Reuses the Figma design-tree resolver from §6.7.
+- **Layout similarity:** coarse geometry (regions, alignment, order) from the
+  rendered DOM vs Figma frame bounds. Pixel diff is too brittle (fonts,
+  antialiasing) to be a primary signal.
+- **Vision judge with the rubric:** a model compares the two PNGs and lists
+  concrete differences; differences feed the next round, the final verdict
+  feeds the score.
+
+The designer's approval is the gate: the harness proposes exemplars, it does
+not create them unattended.
+
+Constraints and inputs:
+- Figma access: a handful of image exports per frame fits personal-plan API
+  limits; manual PNG export works too. Node JSON is optional.
+- Calibration on open material first: public antd page templates that exist
+  both as rendered pages and as code give known-good pairs to tune the
+  comparison before Figma screens are used.
+- Private screens and the resulting exemplars never enter this repo.
+
+Open questions for this track:
+- Source of the first exemplars: hand-picked open antd pages, Figma
+  reconstructions, or both.
+- Score thresholds that mean "good enough to show a designer".
+- Whether variants (12.1 item 5) are generated inside the harness or only in
+  normal use.
