@@ -9,6 +9,7 @@ export interface SearchHit {
 }
 
 const DEPRECATED_FACTOR = 0.3;
+const EXACT_NAME_BONUS = 2;
 const MAX_WHY = 120;
 
 const clip = (s: string) => (s.length > MAX_WHY ? `${s.slice(0, MAX_WHY - 1)}…` : s);
@@ -43,7 +44,10 @@ export function createComponentSearch(index: KitIndex, synonyms: Record<string, 
         const why = syn ? `matches synonym "${syn}"` : comp.description ?? comp.name;
         const hit: SearchHit = {
           name: comp.name,
-          score: comp.deprecated !== undefined ? r.score * DEPRECATED_FACTOR : r.score,
+          score:
+            r.score *
+            (comp.deprecated !== undefined ? DEPRECATED_FACTOR : 1) *
+            (comp.name.toLowerCase() === query.trim().toLowerCase() ? EXACT_NAME_BONUS : 1),
           why: clip(why),
         };
         if (comp.deprecated !== undefined) hit.deprecated = comp.deprecated;

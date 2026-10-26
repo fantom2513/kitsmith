@@ -22,10 +22,20 @@ export function loadDocs(dir: string): DocEntry[] {
     });
 }
 
-const MIN_DOC_SCORE = 1;
+const MIN_COVERAGE = 0.5;
+const MIN_TERM_LENGTH = 3;
+const STOPWORDS = new Set(["the", "and", "for", "with", "from", "into", "that", "this", "how", "make", "can", "use"]);
+
+function meaningfulTerms(query: string): string[] {
+  return query
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((t) => t.length >= MIN_TERM_LENGTH && !STOPWORDS.has(t));
+}
 
 function searchDocs(docs: DocEntry[], query: string, fields: string[], boost: Record<string, number>) {
-  if (!query.trim() || docs.length === 0) return undefined;
+  const terms = meaningfulTerms(query);
+  if (terms.length === 0 || docs.length === 0) return undefined;
   const mini = new MiniSearch({ fields });
   mini.addAll(
     docs.map((d) => ({
@@ -35,9 +45,11 @@ function searchDocs(docs: DocEntry[], query: string, fields: string[], boost: Re
       body: d.body,
     })),
   );
-  const best = mini.search(query, { boost, fuzzy: 0.2, prefix: true })[0];
-  if (!best || best.score < MIN_DOC_SCORE) return undefined;
-  return docs.find((d) => d.slug === best.id);
+  // OR search, then require that enough of the meaningful query terms matched.
+  const best = mini
+    .search(terms.join(" "), { boost, fuzzy: 0.2, prefix: true, combineWith: "OR" })
+    .find((r) => r.queryTerms.length / terms.length >= MIN_COVERAGE);
+  return best ? docs.find((d) => d.slug === best.id) : undefined;
 }
 
 export function findRecipe(recipes: DocEntry[], intent: string): DocEntry | undefined {
