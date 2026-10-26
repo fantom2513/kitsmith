@@ -114,6 +114,12 @@ function isInImport(sf: ts.SourceFile, pos: number): boolean {
 const toRel = (projectDir: string, file: string) =>
   path.relative(projectDir, file).split(path.sep).join("/");
 
+/** Project-relative ("/" separated) paths of all files in the tsconfig program. Throws TypecheckConfigError. */
+export function listTsconfigFiles(projectDir: string): Set<string> {
+  const { config } = createProject(projectDir);
+  return new Set(config.fileNames.map((f) => toRel(projectDir, f)));
+}
+
 export function runTypecheck(projectDir: string, files?: string[]): TypeFinding[] {
   const { service, config } = createProject(projectDir);
   const known = new Set(config.fileNames.map((f) => toRel(projectDir, f)));
