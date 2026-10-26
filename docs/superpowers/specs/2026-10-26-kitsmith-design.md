@@ -331,11 +331,12 @@ Private adapters are built separately, outside this repo.
   kit-independent generic set plus kit overrides.
 - Second kit: MUI or Mantine.
 
-## 12. Design quality track (direction, not yet scheduled)
+## 12. Design quality track (separate, future)
 
 How kitsmith learns a designer's view of "good" and measurably improves what
-agents generate. Not tied to a maturity stage; the author is still deciding
-where exemplar material comes from.
+agents generate. This is a separate track kept for the future: it does not
+change the stages in §3 or the delivery order in §9, and nothing here is
+planned yet. The author is still deciding where exemplar material comes from.
 
 ### 12.1 Teaching material, in order of leverage
 
