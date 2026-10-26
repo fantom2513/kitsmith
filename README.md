@@ -56,7 +56,9 @@ cd ../demo && npm run dev
 mock-data helpers, `AGENTS.md`, `CLAUDE.md` and `.mcp.json` already wired to
 kitsmith. When run from a clone, the generated MCP config starts the server with
 `node <clone>/dist/cli.js serve --project .`, so build the clone first; once
-kitsmith is installed from npm it uses `npx kitsmith serve --project .`. Open the folder in your agent host and describe the screens you want.
+kitsmith is installed from npm it uses `npx kitsmith serve --project .`.
+Then open the folder in your agent host and describe the screens you want.
+`.kitsmith/` and the generated `.mcp.json` server command are machine-local (they hold absolute paths), so keep them out of version control.
 The project name must be lowercase and npm-safe. If `npm install` fails, the
 project is kept and you are told to run `npm install` yourself (`--no-install`
 skips the install step).

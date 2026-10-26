@@ -159,3 +159,38 @@ describe("ruleHelpers childElements / attrExpressionType", () => {
     expect(out).toEqual({ kids: ["Button", "Input.TextArea"], title: "Literal", extra: "ConditionalExpression", none: undefined });
   });
 });
+
+describe("ruleHelpers.styleLiteral", () => {
+  it("returns literal style values and undefined for everything else", async () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "kitsmith-det-"));
+    fs.writeFileSync(
+      path.join(dir, "a.tsx"),
+      `const v = "x";
+export const A = () => (
+  <div style={{ border: "none", padding: 0, margin: v, "gap": 4, [v]: 1 }} />
+);`,
+    );
+    const out: Record<string, string | number | undefined> = {};
+    const probe: DetectorRule = {
+      id: "probe",
+      suggest: "",
+      description: "",
+      rule: {
+        meta: { schema: [] },
+        create() {
+          return {
+            JSXOpeningElement(node: any) {
+              for (const k of ["border", "padding", "margin", "gap", "missing"]) out[k] = ruleHelpers.styleLiteral(node, k);
+            },
+          } as Rule.RuleListener;
+        },
+      },
+    };
+    try {
+      runDetector(dir, ["a.tsx"], { ...(await loadAdapter(adapterDir)), rules: [probe] });
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+    expect(out).toEqual({ border: "none", padding: 0, margin: undefined, gap: 4, missing: undefined });
+  });
+});

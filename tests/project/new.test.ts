@@ -26,6 +26,13 @@ describe("createPrototype", () => {
     expect(read("AGENTS.md")).toContain("<!-- kitsmith:end -->");
   });
 
+  it("ships a .gitignore that excludes machine-local state", async () => {
+    const { dir } = await createPrototype({ name: "demo-app", adapterDir, parentDir: parent, install: false });
+    const ignore = fs.readFileSync(path.join(dir, ".gitignore"), "utf8").split(/\r?\n/);
+    expect(ignore).toEqual(expect.arrayContaining(["node_modules/", "dist/", ".kitsmith/"]));
+    expect(fs.existsSync(path.join(dir, "gitignore"))).toBe(false);
+  });
+
   it("refuses non-empty target dir", async () => {
     const target = path.join(parent, "taken");
     fs.mkdirSync(target);

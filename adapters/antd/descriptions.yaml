@@ -272,15 +272,6 @@ Rate:
 Result:
   description: "Full-block outcome page for success, failure or other statuses."
   category: feedback
-Result.PRESENTED_IMAGE_403:
-  description: "Built-in 403 illustration for Result."
-  category: feedback
-Result.PRESENTED_IMAGE_404:
-  description: "Built-in 404 illustration for Result."
-  category: feedback
-Result.PRESENTED_IMAGE_500:
-  description: "Built-in 500 illustration for Result."
-  category: feedback
 Row:
   description: "Row of the 24-part grid that holds Col elements."
   category: layout

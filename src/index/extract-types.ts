@@ -10,6 +10,8 @@ export interface ExtractOptions {
 }
 
 const MAX_TYPE_LENGTH = 200;
+/** ALL_CAPS names (e.g. PRESENTED_IMAGE_404) are constants, not components. */
+const isConstantName = (name: string) => /^[A-Z][A-Z0-9_]*$/.test(name) && (name.includes("_") || name.length > 1);
 const REACT_TYPES_RE = /[\/]@types[\/]react[\/]/;
 
 export function extractComponents(opts: ExtractOptions): ComponentEntry[] {
@@ -93,7 +95,7 @@ export function extractComponents(opts: ExtractOptions): ComponentEntry[] {
 
   const results: ComponentEntry[] = [];
   for (const [exportName, declarations] of sourceFile.getExportedDeclarations()) {
-    if (!/^[A-Z]/.test(exportName)) continue;
+    if (!/^[A-Z]/.test(exportName) || isConstantName(exportName)) continue;
     for (const decl of declarations) {
       // Only value declarations can be components (skips interfaces / type aliases).
       if (!(decl.getKindName() === "VariableDeclaration" || decl.getKindName() === "FunctionDeclaration" || decl.getKindName() === "ClassDeclaration")) continue;
@@ -109,7 +111,7 @@ export function extractComponents(opts: ExtractOptions): ComponentEntry[] {
       // Subcomponents: one level deep, uppercase static properties that are components themselves.
       for (const member of type.getProperties()) {
         const memberName = member.getName();
-        if (!/^[A-Z]/.test(memberName)) continue;
+        if (!/^[A-Z]/.test(memberName) || isConstantName(memberName)) continue;
         const memberType = member.getTypeAtLocation(decl);
         const memberProps = propsTypeOf(memberType, decl);
         if (!memberProps) continue;

@@ -55,6 +55,8 @@ export interface RuleHelpers {
   attrExpressionType(node: JsxElementNode, name: string): string | undefined;
   /** Keys of an inline object literal passed as style={{ ... }}. */
   styleKeys(node: JsxElementNode): string[];
+  /** Literal value (string or number) of an inline style key; undefined if absent or not a literal. */
+  styleLiteral(node: JsxElementNode, key: string): string | number | undefined;
 }
 
 export const ruleHelpers: RuleHelpers = {
@@ -114,5 +116,19 @@ export const ruleHelpers: RuleHelpers = {
       else if (p.key.type === "Literal") keys.push(String(p.key.value));
     }
     return keys;
+  },
+
+  styleLiteral(node, key) {
+    const attr = ruleHelpers.getAttr(node, "style");
+    const expr = attr?.value?.type === "JSXExpressionContainer" ? attr.value.expression : undefined;
+    if (expr?.type !== "ObjectExpression") return undefined;
+    for (const p of expr.properties) {
+      if (p.type !== "Property" || p.computed) continue;
+      const name = p.key.type === "Identifier" ? p.key.name : p.key.type === "Literal" ? String(p.key.value) : undefined;
+      if (name !== key) continue;
+      if (p.value.type === "Literal" && (typeof p.value.value === "string" || typeof p.value.value === "number")) return p.value.value;
+      return undefined;
+    }
+    return undefined;
   },
 };

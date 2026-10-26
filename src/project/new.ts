@@ -4,6 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { LoadedAdapter } from "../adapter/types.js";
 import { loadAdapter } from "../adapter/load.js";
+import { KitNotInstalledError, loadOrBuildIndex } from "../index/build.js";
 import { initProject } from "./init.js";
 
 const templateDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../templates/sandbox");
@@ -74,6 +75,12 @@ export async function createPrototype(opts: {
         `Prototype created at ${dir}, but dependency install failed (${e instanceof Error ? e.message : String(e)}). Run \`npm install\` there manually.`,
       );
     }
+    // Warm the index cache so the first `serve` does not pay the cold extraction cost.
+    try {
+      loadOrBuildIndex(adapter, dir);
+    } catch (e) {
+      if (!(e instanceof KitNotInstalledError)) throw e;
+    }
   }
   return { dir };
 }
@@ -81,6 +88,9 @@ export async function createPrototype(opts: {
 async function generate(dir: string, adapterDir: string, adapter: LoadedAdapter, name: string): Promise<void> {
   fs.mkdirSync(dir, { recursive: true });
   fs.cpSync(templateDir, dir, { recursive: true });
+  // npm strips files named .gitignore from published packages, so the template ships it undotted.
+  const shippedIgnore = path.join(dir, "gitignore");
+  if (fs.existsSync(shippedIgnore)) fs.renameSync(shippedIgnore, path.join(dir, ".gitignore"));
 
   const sandbox = adapter.config.sandbox;
   if (sandbox) fs.cpSync(path.resolve(adapterDir, sandbox.overlay), dir, { recursive: true });

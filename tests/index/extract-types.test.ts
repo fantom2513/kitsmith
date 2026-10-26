@@ -25,6 +25,11 @@ describe("extractComponents", () => {
     ]);
   });
 
+  it("skips ALL_CAPS constants such as Input.MAX_ROWS", () => {
+    expect(components.map((c) => c.name)).not.toContain("Input.MAX_ROWS");
+    expect(get("Input").subcomponents).toEqual(["Input.TextArea"]);
+  });
+
   it("skips React context objects", () => {
     expect(components.map((c) => c.name)).not.toContain("ThemeContext");
   });

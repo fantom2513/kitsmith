@@ -55,6 +55,16 @@ describe("mcp server", () => {
     expect(desc("validate").endsWith(ladderValidateSentence())).toBe(true);
   });
 
+  it("AGENTS.md template mentions exactly the registered tools", async () => {
+    const { tools } = await client.listTools();
+    const registered = tools.map((t) => t.name).sort();
+    const template = fs
+      .readFileSync(path.resolve("templates/AGENTS.md.tpl"), "utf8")
+      .replace("{{LADDER}}", renderLadder("mini-kit", ["mini-charts"]));
+    const mentioned = [...new Set(template.match(/\b(?:[a-z]+_)+[a-z]+\b|\bvalidate\b/g) ?? [])].sort();
+    expect(mentioned).toEqual(registered);
+  });
+
   it("server instructions equal the ladder", () => {
     expect(client.getInstructions()).toBe(renderLadder("mini-kit", ["mini-charts"]));
   });

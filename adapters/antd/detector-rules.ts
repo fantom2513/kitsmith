@@ -28,6 +28,9 @@ function jsxRule(
   };
 }
 
+/** Input types with no kit equivalent that a plain <input> is the right tool for. */
+const NON_TEXT_INPUT_TYPES = new Set(["file", "submit", "reset", "button", "image", "color", "hidden"]);
+
 export default function rules(h: RuleHelpers): DetectorRule[] {
   const staticInputType = (node: OpeningElement): string | undefined => {
     const value = h.getAttr(node, "type")?.value;
@@ -64,8 +67,9 @@ export default function rules(h: RuleHelpers): DetectorRule[] {
         if (name === "textarea") return "Use Input.TextArea from antd instead of a raw <textarea>.";
         if (name !== "input") return undefined;
         const type = staticInputType(node);
-        if (type === "hidden") return undefined;
-        const target = type === "checkbox" ? "Checkbox" : type === "radio" ? "Radio" : type === "number" ? "InputNumber" : "Input";
+        if (type !== undefined && NON_TEXT_INPUT_TYPES.has(type)) return undefined;
+        const target =
+          type === "checkbox" ? "Checkbox" : type === "radio" ? "Radio" : type === "number" ? "InputNumber" : type === "range" ? "Slider" : "Input";
         return `Use ${target} from antd instead of a raw <input>.`;
       },
     ),
@@ -82,7 +86,9 @@ export default function rules(h: RuleHelpers): DetectorRule[] {
       (node) => {
         if (h.jsxName(node) !== "div") return undefined;
         const keys = h.styleKeys(node);
-        return keys.includes("borderRadius") && (keys.includes("boxShadow") || keys.includes("border"))
+        const border = h.styleLiteral(node, "border");
+        const hasBorder = keys.includes("border") && border !== "none" && border !== 0;
+        return keys.includes("borderRadius") && (keys.includes("boxShadow") || hasBorder)
           ? "A <div> styled as a rounded box with border or shadow is a Card. Use Card from antd."
           : undefined;
       },

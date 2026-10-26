@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadAdapter } from "../adapter/load.js";
+import { KitNotInstalledError, loadOrBuildIndex } from "../index/build.js";
 import { renderLadder } from "../server/ladder.js";
 
 export class InitError extends Error {}
@@ -34,10 +35,39 @@ function upsertBlock(existing: string | undefined, block: string): string {
   return `${existing.replace(/\s*$/, "")}\n\n${wrapped}\n`;
 }
 
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+function readMcpConfig(mcpFile: string): { mcpServers?: Record<string, unknown> } {
+  const text = readIfExists(mcpFile);
+  if (text === undefined || text.trim() === "") return {};
+  const fail = () => new InitError(`Cannot parse ${mcpFile}; fix or remove it and run init again.`);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw fail();
+  }
+  if (!isPlainObject(parsed)) throw fail();
+  if (parsed.mcpServers !== undefined && !isPlainObject(parsed.mcpServers)) throw fail();
+  return parsed as { mcpServers?: Record<string, unknown> };
+}
+
+/** Keeps the machine-local `.kitsmith/` cache out of version control. */
+function ensureGitignored(projectDir: string, write: (rel: string, content: string) => void): void {
+  const file = path.join(projectDir, ".gitignore");
+  const existing = readIfExists(file);
+  if (existing === undefined) return write(".gitignore", ".kitsmith/\n");
+  const ignored = existing.split(/\r?\n/).some((l) => /^\/?\.kitsmith\/?\*?$/.test(l.trim()));
+  if (!ignored) write(".gitignore", `${existing.replace(/\s*$/, "")}\n.kitsmith/\n`);
+}
+
 export async function initProject(opts: { projectDir: string; adapterDir: string }): Promise<{ written: string[]; snippets: string }> {
   const projectDir = path.resolve(opts.projectDir);
   const adapterDir = path.resolve(opts.adapterDir);
   const adapter = await loadAdapter(adapterDir);
+  const mcp = readMcpConfig(path.join(projectDir, ".mcp.json"));
   const written: string[] = [];
   const write = (rel: string, content: string) => {
     const file = path.join(projectDir, rel);
@@ -57,19 +87,18 @@ export async function initProject(opts: { projectDir: string; adapterDir: string
   if (claude === undefined) write("CLAUDE.md", "@AGENTS.md\n");
   else if (!/^@AGENTS\.md\s*$/m.test(claude)) write("CLAUDE.md", `${claude.replace(/\s*$/, "")}\n\n@AGENTS.md\n`);
 
-  const mcpFile = path.join(projectDir, ".mcp.json");
-  const mcpText = readIfExists(mcpFile);
-  let mcp: { mcpServers?: Record<string, unknown> } = {};
-  if (mcpText !== undefined && mcpText.trim() !== "") {
-    try {
-      mcp = JSON.parse(mcpText);
-    } catch {
-      throw new InitError(`Cannot parse ${mcpFile}; fix or remove it and run init again.`);
-    }
-  }
   const server = serverCommand(packageRoot);
   mcp.mcpServers = { ...mcp.mcpServers, kitsmith: server };
   write(".mcp.json", JSON.stringify(mcp, null, 2) + "\n");
+
+  ensureGitignored(projectDir, write);
+
+  // Warm the index cache so the first `serve` does not pay the cold extraction cost.
+  try {
+    loadOrBuildIndex(adapter, projectDir);
+  } catch (e) {
+    if (!(e instanceof KitNotInstalledError)) throw e;
+  }
 
   const snippets = [
     "Codex (add to ~/.codex/config.toml):",
