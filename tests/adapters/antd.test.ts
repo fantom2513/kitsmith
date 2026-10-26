@@ -35,8 +35,9 @@ describe("antd adapter", () => {
 
   it("antd search", () => {
     const search = createComponentSearch(index, adapter.synonyms);
-    expect(search.find("toggle group")[0].name).toBe("Segmented");
-    expect(search.find("переключатель")[0].name).toBe("Segmented");
+    expect(search.find("data table")[0].name).toBe("Table");
+    expect(search.find("модальное окно")[0].name).toBe("Modal");
+    expect(search.find("боковая панель")[0].name).toBe("Drawer");
     expect(search.find("kpi").map((h) => h.name)).toContain("Statistic");
   });
 

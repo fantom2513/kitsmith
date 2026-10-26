@@ -43,15 +43,15 @@ export default function rules(h: RuleHelpers): DetectorRule[] {
 
   return [
     jsxRule(
-      "segmented-from-buttons",
+      "toggle-group-from-buttons",
       "Segmented",
-      "Buttons that switch their own `type` to show a selected state are a segmented control: use Segmented.",
+      "Buttons that switch their own `type` to show a selected state form a toggle group: use Segmented or Radio.Group.",
       (node, context) => {
         const toggles = h
           .childElements(node)
           .filter((c) => h.isKitElement(context, c) && h.jsxName(c) === "Button" && h.attrExpressionType(c, "type") === "ConditionalExpression");
         return toggles.length >= 2
-          ? "Buttons toggling their type to mark the active one are a hand-made segmented control. Use Segmented."
+          ? "Buttons toggling their type to mark the active one are a hand-made toggle group. Use Segmented or Radio.Group with optionType=\"button\"."
           : undefined;
       },
     ),

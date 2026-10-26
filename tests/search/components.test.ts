@@ -16,9 +16,15 @@ beforeAll(async () => {
 });
 
 describe("createComponentSearch", () => {
-  it("finds by name", () => expect(search.find("segmented")[0].name).toBe("Segmented"));
-  it("finds by English synonym", () => expect(search.find("toggle group")[0].name).toBe("Segmented"));
-  it("finds by Russian synonym", () => expect(search.find("переключатель")[0].name).toBe("Segmented"));
+  it("finds by name", () => expect(search.find("card")[0].name).toBe("Card"));
+  it("finds by English synonym", () => {
+    expect(search.find("data grid")[0].name).toBe("Table");
+    expect(search.find("toggle group")[0].name).toBe("Segmented");
+  });
+  it("finds by Russian synonym", () => {
+    expect(search.find("карточка")[0].name).toBe("Card");
+    expect(search.find("таблица")[0].name).toBe("Table");
+  });
   it("ranks deprecated down and flags it", () => {
     const hits = search.find("table");
     const names = hits.map((h) => h.name);
@@ -26,15 +32,15 @@ describe("createComponentSearch", () => {
     expect(names.indexOf("Table")).toBeLessThan(names.indexOf("OldTable"));
     expect(hits.find((h) => h.name === "OldTable")?.deprecated).toBe("Use Table");
   });
-  it("fuzzy tolerates typos", () => expect(search.find("segmentd")[0].name).toBe("Segmented"));
+  it("fuzzy tolerates typos", () => expect(search.find("buton")[0].name).toBe("Button"));
   it("returns [] for empty query", () => {
     expect(search.find("")).toEqual([]);
     expect(search.find("   ")).toEqual([]);
   });
   it("explains the match and respects limit", () => {
-    const hit = search.find("toggle group", 1);
+    const hit = search.find("data grid", 1);
     expect(hit).toHaveLength(1);
-    expect(hit[0].why).toContain("toggle group");
+    expect(hit[0].why).toContain("data grid");
     expect(hit[0].why.length).toBeLessThanOrEqual(120);
   });
 });

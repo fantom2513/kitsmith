@@ -74,7 +74,7 @@ describe("mcp server", () => {
   });
 
   it("find_component resolves a Russian intent", async () => {
-    expect((await call("find_component", { intent: "переключатель" })).text.startsWith("- Segmented")).toBe(true);
+    expect((await call("find_component", { intent: "таблица" })).text.startsWith("- Table")).toBe(true);
   });
 
   it("get_component shows props table and HTML attributes note", async () => {

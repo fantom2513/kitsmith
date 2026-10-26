@@ -15,9 +15,9 @@ describe("buildIndex", () => {
   it("merges adapter descriptions and categories", async () => {
     const adapter = await loadAdapter(adapterDir);
     const index = buildIndex(adapter, fixtureProjectDir);
-    const seg = get(index, "Segmented");
-    expect(seg.description).toBe("Segmented control to pick one option from a short list.");
-    expect(seg.category).toBe("data-entry");
+    const table = get(index, "Table");
+    expect(table.description).toBe("Table that renders rows of data in columns.");
+    expect(table.category).toBe("data-display");
   });
 
   it("lets a JSDoc description win only when yaml has none", async () => {

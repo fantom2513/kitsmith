@@ -1,3 +1,3 @@
-import { Segmented } from "mini-kit";
+import { Table } from "mini-kit";
 
-export const WrongType = () => <Segmented options={5} />;
+export const WrongType = () => <Table columns={5} />;

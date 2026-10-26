@@ -6,8 +6,8 @@ specific React component kit instead of hand-rolling it.
 Agents are bad at building on a given kit in three ways:
 
 1. **They don't reach for the kit.** Left alone, an agent writes something "in
-   the style of" the kit, for example a segmented control rebuilt from a row of
-   `Button`s while the kit ships `Segmented`.
+   the style of" the kit: a styled `div` instead of the kit's card, a raw
+   `<table>` instead of its table, a home-made dialog instead of its modal.
 2. **When they do use it, they get props wrong:** invented props, wrong value
    types, deprecated API.
 3. **They don't compose.** When no ready-made component exists, they write from
@@ -107,7 +107,7 @@ prompts or host-specific skills.
 | `validate` | `files?: string[]` | `tsc` against the real kit types plus the duplicate detector |
 
 Search understands adapter synonyms, including non-English ones
-(for example "переключатель" finds `Segmented` in the antd adapter).
+(for example "таблица" finds `Table` in the antd adapter).
 
 ## Writing an adapter
 
@@ -153,7 +153,7 @@ Markdown files with frontmatter; the body is served as-is.
 ---
 title: Filter bar
 intents: ["filter bar", "search and filter"]
-components: [Space, Input, Select, Segmented, Button]
+components: [Space, Input, Select, DatePicker, Button]
 ---
 Use above a list or table to narrow results...
 ```
@@ -207,8 +207,8 @@ MCP client lists all seven tools from `serve`, and `find_component` resolves a
 Russian-language intent.
 
 Pending: a manual check with real agent hosts (Claude Code, Codex, OpenCode)
-on a prompt such as "an orders page with a status filter as a segmented
-control, a table and a KPI row".
+on a prompt such as "an orders page with filters, a table, a KPI row and an
+order details dialog".
 
 ## Roadmap
 

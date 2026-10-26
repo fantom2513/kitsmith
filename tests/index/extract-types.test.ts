@@ -37,11 +37,11 @@ describe("extractComponents", () => {
   it("extracts own props without React HTML attributes", () => {
     expect(get("Button").props.map((p) => p.name)).toEqual(["ghostly", "onClick", "size", "type"]);
     expect(get("Button").extendsHtmlAttributes).toBe(true);
-    expect(get("Segmented").extendsHtmlAttributes).toBe(false);
+    expect(get("Table").extendsHtmlAttributes).toBe(false);
   });
 
   it("reads required, default, deprecated", () => {
-    expect(prop("Segmented", "options").required).toBe(true);
+    expect(prop("Table", "columns").required).toBe(true);
     expect(prop("Button", "size").default).toBe('"middle"');
     expect(prop("Button", "ghostly").deprecated).toBe("use type");
     expect(get("OldTable").deprecated).toBe("Use Table");

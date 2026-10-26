@@ -1,8 +1,8 @@
-import { Button, Segmented } from "mini-kit";
+import { Button, Table } from "mini-kit";
 
 export const Good = () => (
   <div>
     <Button type="primary">Ok</Button>
-    <Segmented options={["a", "b"]} />
+    <Table columns={[{ title: "Name", dataIndex: "name" }]} />
   </div>
 );

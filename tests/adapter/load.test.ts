@@ -10,7 +10,7 @@ describe("loadAdapter", () => {
   it("loads mini-kit adapter", async () => {
     const a = await loadAdapter(fixture);
     expect(a.config.name).toBe("mini-kit");
-    expect(a.synonyms.Segmented).toContain("переключатель");
+    expect(a.synonyms.Card).toContain("карточка");
     expect(a.rules.map((r) => r.id)).toEqual(["raw-button"]);
     expect(a.recipes[0].slug).toBe("metric-card");
     expect(a.guidelines[0].slug).toBe("states");
